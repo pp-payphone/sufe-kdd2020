@@ -1,4 +1,3 @@
-晨语凡心:
 class Agent(object):
     """ Agent for dispatching and reposition """
 
@@ -24,12 +23,12 @@ class Agent(object):
     :return: a list of dict, the key in the dict includes:
         order_id and driver_id, the pair indicating the assignment
     """
-    order_ids, driver_ids, result = process(dispatch_observ)
+    order_ids, driver_ids, result = self.process(dispatch_observ)
     num_orders, num_drivers = len(order_ids), len(driver_ids)
     dispatch_action = []
-    left_num, right_num = num_drivers, num_orders #司机放左边，订单放右边
+    left_num, right_num = num_drivers, num_orders  # 司机放左边，订单放右边
     N = max(left_num, right_num)
-    weight = [[0]* N for i in range(N)]
+    weight = [[0] * N for i in range(N)]
     for j in range(left_num):
         for i in range(right_num):
             if (order_ids[i], driver_ids[j]) in result:
@@ -42,3 +41,15 @@ class Agent(object):
             dispatch_action.append(dict(order_id=order_ids[i], driver_id=driver_ids[km.right_match[i]]))
     return dispatch_action
 
+    def process(self, dispatch_observ):
+        order_ids = set()
+        driver_ids = set()
+        result = dict()
+        for od in dispatch_observ:
+            oid, did = od["order_id"], od["driver_id"]
+            order_ids.add(oid)
+            driver_ids.add(did)
+            result[(oid, did)] = od["reward_units"]
+        order_ids = list(order_ids)
+        driver_ids = list(driver_ids)
+        return order_ids, driver_ids, result
