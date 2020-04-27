@@ -9,8 +9,9 @@ class Agent(object):
     """Agent for dispatching and reposition"""
 
     def __init__(self):
-        self.value_fun = np.load(os.path.join(os.path.dirname(__file__), "mdp_value_5.npy"))
-        self.gamma = 0.95
+        self.value_fun = np.load(os.path.join(os.path.dirname(__file__), "mdp_value_without_5.npy"))
+        self.gamma = 0.95  # 每份时间的折现率
+        self.alpha1 = 0.5  # value_fun权重
         self.BASETIME = 946670400  # 2020.1.1 04:00:00
         self.dispatch_frequency_gap = 300  # 以5分钟为时间间隔
         self.grid_search = GridSearch()
@@ -83,8 +84,12 @@ class Agent(object):
             ltid = int(((lts - self.BASETIME)//self.dispatch_frequency_gap) % (24*3600//self.dispatch_frequency_gap))
             order_ids.add(oid)
             driver_ids.add(did)
-            discount_rate = pow(self.gamma, ltid-ftid)
-            result[(oid, did)] = od["reward_units"] * discount_rate + discount_rate * self.value_fun[ltid][lgrid] - self.value_fun[ftid][fgrid]
+            tid_period = ltid - ftid
+            if tid_period == 0:
+                result[(oid, did)] = od["reward_units"] + self.value_fun[ltid][lgrid] - self.value_fun[ftid][fgrid]
+            else:
+                discount_rate = pow(self.gamma, tid_period)
+                result[(oid, did)] = (od["reward_units"]*(1-pow(self.gamma, tid_period)))/(tid_period*(1-self.gamma)) + self.alpha1*(discount_rate * self.value_fun[ltid][lgrid] - self.value_fun[ftid][fgrid])
         order_ids = list(order_ids)
         driver_ids = list(driver_ids)
         return order_ids, driver_ids, result
