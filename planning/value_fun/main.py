@@ -1,5 +1,5 @@
 """main."""
-from agent_baseline_scipy import Agent
+from agent_baseline import Agent
 import time
 
 if __name__ == "__main__":

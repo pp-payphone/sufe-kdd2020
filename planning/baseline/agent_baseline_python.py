@@ -1,21 +1,14 @@
 """agent."""
 from bfskm import bfsKM
-import numpy as np
-from gridsearch import GridSearch
-import os
 
 
 class Agent(object):
     """Agent for dispatching and reposition"""
 
     def __init__(self):
-        self.value_fun = np.load(os.path.join(os.path.dirname(__file__), "mdp_value_without_5.npy"))
-        self.gamma = 0.95  # 每份时间的折现率
-        self.alpha1 = 0.5  # value_fun权重
+        self.gamma = 0.95
         self.BASETIME = 946670400  # 2020.1.1 04:00:00
         self.dispatch_frequency_gap = 300  # 以5分钟为时间间隔
-        self.grid_search = GridSearch()
-        # self.gridsearch = GridSearch()
         pass
 
     def dispatch(self, dispatch_observ):
@@ -79,17 +72,15 @@ class Agent(object):
         result = dict()
         for od in dispatch_observ:
             oid, did, fts, lts = od["order_id"], od["driver_id"], od["timestamp"], od["order_finish_timestamp"] + od["pick_up_eta"]
-            fgrid, lgrid = self.grid_search.cal_loc_grid([od["driver_location"], od["order_finish_location"]])
             ftid = int(((fts - self.BASETIME)//self.dispatch_frequency_gap) % (24*3600//self.dispatch_frequency_gap))
             ltid = int(((lts - self.BASETIME)//self.dispatch_frequency_gap) % (24*3600//self.dispatch_frequency_gap))
             order_ids.add(oid)
             driver_ids.add(did)
             tid_period = ltid - ftid
             if tid_period == 0:
-                result[(oid, did)] = od["reward_units"] + self.value_fun[ltid][lgrid] - self.value_fun[ftid][fgrid]
+                result[(oid, did)] = od["reward_units"]
             else:
-                discount_rate = pow(self.gamma, tid_period)
-                result[(oid, did)] = (od["reward_units"]*(1-pow(self.gamma, tid_period)))/(tid_period*(1-self.gamma)) + self.alpha1*(discount_rate * self.value_fun[ltid][lgrid] - self.value_fun[ftid][fgrid])
+                result[(oid, did)] = (od["reward_units"]*(1-pow(self.gamma, tid_period)))/(tid_period*(1-self.gamma))
         order_ids = list(order_ids)
         driver_ids = list(driver_ids)
         return order_ids, driver_ids, result
