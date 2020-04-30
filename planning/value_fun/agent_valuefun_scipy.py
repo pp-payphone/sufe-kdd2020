@@ -16,7 +16,6 @@ class Agent(object):
         self.dispatch_frequency_gap = 300  # 以5分钟为时间间隔
         self.grid_search = GridSearch()
         # self.gridsearch = GridSearch()
-        pass
 
     def dispatch(self, dispatch_observ):
         """ Compute the assignment between drivers and passengers at each time step

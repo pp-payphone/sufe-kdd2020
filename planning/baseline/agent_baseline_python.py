@@ -9,7 +9,6 @@ class Agent(object):
         self.gamma = 0.95
         self.BASETIME = 946670400  # 2020.1.1 04:00:00
         self.dispatch_frequency_gap = 300  # 以5分钟为时间间隔
-        pass
 
     def dispatch(self, dispatch_observ):
         """ Compute the assignment between drivers and passengers at each time step

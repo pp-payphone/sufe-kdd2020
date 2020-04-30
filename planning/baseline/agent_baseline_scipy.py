@@ -10,7 +10,6 @@ class Agent(object):
         self.gamma = 0.95
         self.BASETIME = 946670400  # 2020.1.1 04:00:00
         self.dispatch_frequency_gap = 300  # 以5分钟为时间间隔
-        pass
 
     def dispatch(self, dispatch_observ):
         """ Compute the assignment between drivers and passengers at each time step
@@ -32,9 +31,10 @@ class Agent(object):
         """
         driver_id_refresh_dict, result = self.process(dispatch_observ)
         dispatch_action = []
-        row_ind, col_ind = linear_sum_assignment(result)
+        row_ind, col_ind = linear_sum_assignment(result, maximize=True)
         for idx, oid in enumerate(row_ind):
-            dispatch_action.append(dict(order_id=oid, driver_id=driver_id_refresh_dict[col_ind[idx]]))
+            if result[oid, col_ind[idx]] != 0:
+                dispatch_action.append(dict(order_id=oid, driver_id=driver_id_refresh_dict[col_ind[idx]]))
         return dispatch_action
 
     def reposition(self, repo_observ):
@@ -69,8 +69,6 @@ class Agent(object):
             oid, did, fts, lts = od["order_id"], driver_id_dict[od["driver_id"]], od["timestamp"], od["order_finish_timestamp"] + od["pick_up_eta"]
             ftid = int(((fts - self.BASETIME)//self.dispatch_frequency_gap) % (24*3600//self.dispatch_frequency_gap))
             ltid = int(((lts - self.BASETIME)//self.dispatch_frequency_gap) % (24*3600//self.dispatch_frequency_gap))
-            order_ids.add(oid)
-            driver_ids.add(did)
             tid_period = ltid - ftid
             if tid_period == 0:
                 result[oid, did] = od["reward_units"]
